@@ -23,7 +23,7 @@ def load_model(model_path):
 
 model_paths = {
     "Linear Regression": "migration_index_linear_regression_Model.pkl",
-    "Random Forest": "migration_index_random_forest.pkl"
+    "Random Forest": "migration_index_random_Forest_Model.pkl"
 }
 
 # Выбор модели
