@@ -57,10 +57,34 @@ input_data = {
     "total_emigrants": st.number_input("Total Emigrants", value=300000),
     "gdp_per_capita_usd": st.number_input("GDP per Capita (USD)", value=1800),
     "it_growth_potential": st.number_input("IT Growth Potential", value=20095),
-    # Добавьте остальные признаки, используемые в модели
+    "difference_in_share": st.number_input("Difference in Share", value=1.5),
+    "it_sector_investments": st.number_input("IT Sector Investments (USD)", value=50000),
+    "specialist_id": st.number_input("Specialist ID (for internal use)", value=0),
+    "net_migration_persons": st.number_input("Net Migration Persons", value=20000),
+    "life_quality_index": st.number_input("Life Quality Index", value=75.4),
+    "age": st.number_input("Age", value=30),
+    "inflation_rate": st.number_input("Inflation Rate (%)", value=3.2),
+    "years_experience": st.number_input("Years of Experience", value=5),
+    "unemployment_rate": st.number_input("Unemployment Rate (%)", value=4.5),
+    "internet_access": st.number_input("Internet Access (%)", value=85),
+    "retention_index": st.number_input("Retention Index", value=0.8),
+    "political_stability_index": st.number_input("Political Stability Index", value=60),
+    "current_salary": st.number_input("Current Salary (USD)", value=50000),
+    "migration_index": st.number_input("Migration Index", value=0.7),
+    "age_specific_migration_risk": st.number_input("Age Specific Migration Risk", value=0.2),
+    "percentage_in_population": st.number_input("Percentage in Population (%)", value=5.3),
+    "total_international_migrants": st.number_input("Total International Migrants", value=100000),
+    "average_it_salary": st.number_input("Average IT Salary (USD)", value=80000)
 }
 
 input_df = pd.DataFrame([input_data])
+
+
+
+st.write("Данные для предсказания:") #new_code
+st.write(input_df) #new_code
+
+
 
 # Кнопка для предсказания
 if st.button("Предсказать"):
