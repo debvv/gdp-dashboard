@@ -3,6 +3,15 @@ import joblib
 import pandas as pd
 import numpy as np
 
+
+
+try:
+    import joblib
+    print("joblib успешно импортирован!")
+except ModuleNotFoundError as e:
+    print(f"Ошибка импорта: {e}")
+
+
 # Заголовок приложения
 st.title("Прогнозирование с использованием моделей машинного обучения")
 st.sidebar.header("Настройки")
