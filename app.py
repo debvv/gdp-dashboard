@@ -5,7 +5,7 @@ import joblib
 # Загрузка сохраненных моделей
 model_paths = {
     "Linear Regression": "migration_index_linear_regression_Model.pkl",
-    "Random Forest": "migration_index_random_Forest_Model.pkl"
+    "Random Forest": "migration_index_random_forest_Model.pkl"
 }
 
 # Функция для предобработки входных данных
@@ -17,7 +17,6 @@ def preprocess_input(input_data, expected_features):
     # Перестановка столбцов в соответствии с моделью
     input_data = input_data[expected_features]
     return input_data
-
 
 # Функция для предсказания
 def predict_with_model(model, input_data):
@@ -70,7 +69,6 @@ input_data = {
     "retention_index": st.number_input("Retention Index", value=0.8),
     "political_stability_index": st.number_input("Political Stability Index", value=60),
     "current_salary": st.number_input("Current Salary (USD)", value=50000),
-    "migration_index": st.number_input("Migration Index", value=0.7),
     "age_specific_migration_risk": st.number_input("Age Specific Migration Risk", value=0.2),
     "percentage_in_population": st.number_input("Percentage in Population (%)", value=5.3),
     "total_international_migrants": st.number_input("Total International Migrants", value=100000),
@@ -79,24 +77,33 @@ input_data = {
 
 input_df = pd.DataFrame([input_data])
 
+# Проверка наличия NaN
+if input_df.isnull().any().any():
+    st.error("Некоторые признаки имеют пропущенные значения. Проверьте ввод.")
 
+# Вывод данных для предсказания
+st.write("Данные для предсказания:")
+st.write(input_df)
 
-st.write("Данные для предсказания:") #new_code
-st.write(input_df) #new_code
-
-
+# Применение scaler (если необходимо)
+if model and hasattr(model, "feature_names_in_"):
+    st.sidebar.write("Ожидаемые признаки модели:")
+    st.sidebar.write(model.feature_names_in_)
+    # Проверка наличия scaler
+    try:
+        scaler = joblib.load("scaler.pkl")
+        input_df_scaled = pd.DataFrame(scaler.transform(input_df), columns=input_df.columns)
+    except FileNotFoundError:
+        st.warning("Scaler не найден. Используются необработанные данные.")
+        input_df_scaled = input_df
+else:
+    input_df_scaled = input_df
 
 # Кнопка для предсказания
 if st.button("Предсказать"):
     if model:
-        prediction = predict_with_model(model, input_df)
+        prediction = predict_with_model(model, input_df_scaled)
         if prediction is not None:
             st.success(f"Предсказание: {prediction}")
     else:
         st.error("Модель не загружена. Выберите модель из списка.")
-
-# Загрузка данных для проверки признаков модели
-if model and hasattr(model, "feature_names_in_"):
-    st.sidebar.header("Информация о модели")
-    st.sidebar.write("Ожидаемые признаки модели:")
-    st.sidebar.write(model.feature_names_in_)
