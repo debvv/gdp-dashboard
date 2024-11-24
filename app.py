@@ -5,7 +5,7 @@ import joblib
 # Загрузка сохраненных моделей
 model_paths = {
     "Linear Regression": "migration_index_linear_regression_Model.pkl",
-    "Random Forest": "migration_index_random_forest_Model.pkl"
+    "Random Forest": "migration_index_random_Forest_Model.pkl"
 }
 
 # Функция для предобработки входных данных
@@ -17,6 +17,7 @@ def preprocess_input(input_data, expected_features):
     # Перестановка столбцов в соответствии с моделью
     input_data = input_data[expected_features]
     return input_data
+
 
 # Функция для предсказания
 def predict_with_model(model, input_data):
@@ -53,9 +54,9 @@ st.header("Введите данные для предсказания")
 input_data = {
     "economic_growth_rate": st.number_input("Economic Growth Rate", value=0.0),
     "year": st.number_input("Year", value=2024),
-    "total_emigrants": st.number_input("Total Emigrants", value=0.0),
-    "gdp_per_capita_usd": st.number_input("GDP per Capita (USD)", value=0.0),
-    "it_growth_potential": st.number_input("IT Growth Potential", value=0.0),
+    "total_emigrants": st.number_input("Total Emigrants", value=300000),
+    "gdp_per_capita_usd": st.number_input("GDP per Capita (USD)", value=1800),
+    "it_growth_potential": st.number_input("IT Growth Potential", value=20095),
     # Добавьте остальные признаки, используемые в модели
 }
 
