@@ -69,6 +69,7 @@ input_data = {
     "retention_index": st.number_input("Retention Index", value=0.8),
     "political_stability_index": st.number_input("Political Stability Index", value=60),
     "current_salary": st.number_input("Current Salary (USD)", value=50000),
+    "migration_index": st.number_input("Migration Index", value=0.7),
     "age_specific_migration_risk": st.number_input("Age Specific Migration Risk", value=0.2),
     "percentage_in_population": st.number_input("Percentage in Population (%)", value=5.3),
     "total_international_migrants": st.number_input("Total International Migrants", value=100000),
