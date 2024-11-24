@@ -43,6 +43,9 @@ for feature in features:
 # Предсказание
 if st.button("Сделать предсказание"):
     input_df = pd.DataFrame([input_data])  # Преобразование в DataFrame
+    print("Input DataFrame Columns[1]:", input_df.columns)
+    print("Model Expected Features[1]:", model.feature_names_in_)
+
     prediction = model.predict(input_df)
     st.subheader("Результат предсказания:")
     st.write(prediction)
@@ -54,6 +57,8 @@ if uploaded_file is not None:
     data = pd.read_csv(uploaded_file)
     st.write("Загруженные данные:")
     st.write(data)
+    print("Input DataFrame Columns[2]:", input_df.columns)
+    print("Model Expected Features[2]:", model.feature_names_in_)
     predictions = model.predict(data)
     st.subheader("Результаты предсказаний:")
     st.write(predictions)
