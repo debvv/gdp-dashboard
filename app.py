@@ -52,7 +52,7 @@ else:
 # Ввод данных пользователем
 st.header("Введите данные для предсказания")
 input_data = {
-    "economic_growth_rate": st.number_input("Economic Growth Rate", value=0.0),
+    "economic_growth_rate": st.number_input("Economic Growth Rate", value=7.1),
     "year": st.number_input("Year", value=2024),
     "total_emigrants": st.number_input("Total Emigrants", value=300000),
     "gdp_per_capita_usd": st.number_input("GDP per Capita (USD)", value=1800),
