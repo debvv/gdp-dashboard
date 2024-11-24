@@ -1,88 +1,77 @@
 import streamlit as st
-import joblib
 import pandas as pd
-import numpy as np
+import joblib
 
-
-
-try:
-    import joblib
-    print("joblib успешно импортирован!")
-except ModuleNotFoundError as e:
-    print(f"Ошибка импорта: {e}")
-
-
-# Заголовок приложения
-st.title("Прогнозирование с использованием моделей машинного обучения")
-st.sidebar.header("Настройки")
-
-# Загрузка модели
-@st.cache_resource
-def load_model(model_path):
-    return joblib.load(model_path)
-
+# Загрузка сохраненных моделей
 model_paths = {
     "Linear Regression": "migration_index_linear_regression_Model.pkl",
-    "Random Forest": "migration_index_random_Forest_Model.pkl"
+    "Random Forest": "migration_index_random_forest_Model.pkl"
 }
+
+# Функция для предобработки входных данных
+def preprocess_input(input_data, expected_features):
+    # Добавление отсутствующих признаков с нулевыми значениями
+    for feature in expected_features:
+        if feature not in input_data.columns:
+            input_data[feature] = 0
+    # Перестановка столбцов в соответствии с моделью
+    input_data = input_data[expected_features]
+    return input_data
+
+# Функция для предсказания
+def predict_with_model(model, input_data):
+    try:
+        # Проверка наличия feature_names_in_ в модели
+        if hasattr(model, "feature_names_in_"):
+            input_data = preprocess_input(input_data, model.feature_names_in_)
+        predictions = model.predict(input_data)
+        return predictions
+    except Exception as e:
+        st.error(f"Ошибка во время предсказания: {e}")
+        return None
+
+# Интерфейс Streamlit
+st.title("Прогнозирование с использованием моделей машинного обучения")
 
 # Выбор модели
 model_name = st.sidebar.selectbox("Выберите модель", list(model_paths.keys()))
-model = load_model(model_paths[model_name])
 
-# Ввод данных для предсказаний
-st.header("Ввод данных")
-st.write("Введите значения признаков для предсказания.")
-input_data = {}
-
-# Пример признаков
-features = ["age", "years_experience", "current_salary", "life_quality_index", "political_stability_index"]
-for feature in features:
-    input_data[feature] = st.number_input(f"Введите значение для {feature}", value=0.0)
-
-# Предсказание
-if st.button("Сделать предсказание"):
-    input_df = pd.DataFrame([input_data])  # Преобразование в DataFrame
-    print("Input DataFrame Columns[1]:", input_df.columns)
-    print("Model Expected Features[1]:", model.feature_names_in_)
-
-    prediction = model.predict(input_df)
-    st.subheader("Результат предсказания:")
-    st.write(prediction)
-
-# Загрузка данных для массовых предсказаний
-st.header("Загрузка данных")
-uploaded_file = st.file_uploader("Загрузите CSV файл для предсказаний", type="csv")
-if uploaded_file is not None:
-    data = pd.read_csv(uploaded_file)
-    st.write("Загруженные данные:")
-    st.write(data)
-    print("Input DataFrame Columns[2]:", input_df.columns)
-    print("Model Expected Features[2]:", model.feature_names_in_)
-    predictions = model.predict(data)
-    st.subheader("Результаты предсказаний:")
-    st.write(predictions)
-
-# Отображение метрик модели
-st.sidebar.header("Информация о модели")
-if model_name == "Linear Regression":
-    st.sidebar.write("Метрики модели Linear Regression:")
-    st.sidebar.write({
-        "MAE": 0.0033,
-        "MSE": 0.000012,
-        "R2": 0.999927
-    })
+# Загрузка модели
+if model_name in model_paths:
+    try:
+        model = joblib.load(model_paths[model_name])
+        st.sidebar.success(f"Модель '{model_name}' загружена.")
+    except FileNotFoundError:
+        st.sidebar.error(f"Файл модели '{model_paths[model_name]}' не найден.")
+        model = None
 else:
-    st.sidebar.write("Метрики модели Random Forest:")
-    st.sidebar.write({
-        "MAE": 0.0932,
-        "MSE": 0.0123,
-        "R2": 0.9250
-    })
+    st.sidebar.error("Модель не выбрана.")
+    model = None
 
-# Логирование (пример)
-st.header("Логирование")
-if st.button("Сохранить результаты"):
-    with open("logs.txt", "a") as log_file:
-        log_file.write(f"Ввод: {input_data}, Предсказание: {prediction}\n")
-    st.success("Результаты сохранены в лог.")
+# Ввод данных пользователем
+st.header("Введите данные для предсказания")
+input_data = {
+    "economic_growth_rate": st.number_input("Economic Growth Rate", value=0.0),
+    "year": st.number_input("Year", value=2024),
+    "total_emigrants": st.number_input("Total Emigrants", value=0.0),
+    "gdp_per_capita_usd": st.number_input("GDP per Capita (USD)", value=0.0),
+    "it_growth_potential": st.number_input("IT Growth Potential", value=0.0),
+    # Добавьте остальные признаки, используемые в модели
+}
+
+input_df = pd.DataFrame([input_data])
+
+# Кнопка для предсказания
+if st.button("Предсказать"):
+    if model:
+        prediction = predict_with_model(model, input_df)
+        if prediction is not None:
+            st.success(f"Предсказание: {prediction}")
+    else:
+        st.error("Модель не загружена. Выберите модель из списка.")
+
+# Загрузка данных для проверки признаков модели
+if model and hasattr(model, "feature_names_in_"):
+    st.sidebar.header("Информация о модели")
+    st.sidebar.write("Ожидаемые признаки модели:")
+    st.sidebar.write(model.feature_names_in_)
