@@ -1,77 +1,56 @@
 import streamlit as st
 import pandas as pd
 import joblib
-
-# Загрузка сохраненных моделей
+# Загрузка модели и предварительных настроек
 model_paths = {
     "Linear Regression": "migration_index_linear_regression_Model.pkl",
     "Random Forest": "migration_index_random_forest_Model.pkl"
 }
 
-# Функция для предобработки входных данных
-def preprocess_input(input_data, expected_features):
-    # Добавление отсутствующих признаков с нулевыми значениями
-    for feature in expected_features:
-        if feature not in input_data.columns:
-            input_data[feature] = 0
-    # Перестановка столбцов в соответствии с моделью
-    input_data = input_data[expected_features]
-    return input_data
+scaler_path = "scaler.pkl"  # Убедитесь, что у вас есть сохраненный объект scaler
+scaler = joblib.load(scaler_path)
 
-# Функция для предсказания
-def predict_with_model(model, input_data):
-    try:
-        # Проверка наличия feature_names_in_ в модели
-        if hasattr(model, "feature_names_in_"):
-            input_data = preprocess_input(input_data, model.feature_names_in_)
-        predictions = model.predict(input_data)
-        return predictions
-    except Exception as e:
-        st.error(f"Ошибка во время предсказания: {e}")
-        return None
+expected_features = ['feature1', 'feature2', 'feature3', ...]  # Список ожидаемых признаков
 
-# Интерфейс Streamlit
-st.title("Прогнозирование с использованием моделей машинного обучения")
+# Предсказание
+def predict_with_model(input_data, model_name):
+    # Загрузка модели
+    model = joblib.load(model_paths[model_name])
+    
+    # Подготовка данных
+    input_df = pd.DataFrame([input_data])
+    
+    # Проверка и добавление недостающих признаков
+    for col in expected_features:
+        if col not in input_df.columns:
+            input_df[col] = 0  # Или значение по умолчанию
+    
+    # Переупорядочивание признаков в соответствии с моделью
+    input_df = input_df[expected_features]
+    
+    # Нормализация
+    input_df = scaler.transform(input_df)
+    
+    # Предсказание
+    prediction = model.predict(input_df)
+    return prediction
 
-# Выбор модели
-model_name = st.sidebar.selectbox("Выберите модель", list(model_paths.keys()))
+# Streamlit интерфейс
+import streamlit as st
 
-# Загрузка модели
-if model_name in model_paths:
-    try:
-        model = joblib.load(model_paths[model_name])
-        st.sidebar.success(f"Модель '{model_name}' загружена.")
-    except FileNotFoundError:
-        st.sidebar.error(f"Файл модели '{model_paths[model_name]}' не найден.")
-        model = None
-else:
-    st.sidebar.error("Модель не выбрана.")
-    model = None
+st.title("Прогнозирование с использованием моделей")
+model_name = st.selectbox("Выберите модель", options=model_paths.keys())
 
-# Ввод данных пользователем
-st.header("Введите данные для предсказания")
+st.sidebar.header("Настройки ввода")
 input_data = {
-    "economic_growth_rate": st.number_input("Economic Growth Rate", value=0.0),
-    "year": st.number_input("Year", value=2024),
-    "total_emigrants": st.number_input("Total Emigrants", value=0.0),
-    "gdp_per_capita_usd": st.number_input("GDP per Capita (USD)", value=0.0),
-    "it_growth_potential": st.number_input("IT Growth Potential", value=0.0),
-    # Добавьте остальные признаки, используемые в модели
+    "feature1": st.sidebar.number_input("Feature 1", value=0),
+    "feature2": st.sidebar.number_input("Feature 2", value=0),
+    # Добавьте остальные признаки
 }
 
-input_df = pd.DataFrame([input_data])
-
-# Кнопка для предсказания
 if st.button("Предсказать"):
-    if model:
-        prediction = predict_with_model(model, input_df)
-        if prediction is not None:
-            st.success(f"Предсказание: {prediction}")
-    else:
-        st.error("Модель не загружена. Выберите модель из списка.")
-
-# Загрузка данных для проверки признаков модели
-if model and hasattr(model, "feature_names_in_"):
-    st.sidebar.header("Информация о модели")
-    st.sidebar.write("Ожидаемые признаки модели:")
-    st.sidebar.write(model.feature_names_in_)
+    try:
+        prediction = predict_with_model(input_data, model_name)
+        st.success(f"Результат предсказания: {prediction}")
+    except Exception as e:
+        st.error(f"Ошибка во время предсказания: {e}")
