@@ -16,30 +16,32 @@ try:
 except FileNotFoundError:
     st.error("Scaler не найден. Убедитесь, что scaler.pkl загружен.")
     scaler = None
-
 # Функция для обработки признаков
-def preprocess_input(input_data, expected_features):
-    # Добавление отсутствующих признаков с нулями
-    for feature in expected_features:
+def preprocess_input(input_data, model_features):
+    """
+    Приведение входных данных в соответствие с признаками, которые использовались для обучения модели.
+    """
+    # Добавить недостающие признаки с нулевыми значениями
+    for feature in model_features:
         if feature not in input_data.columns:
-            input_data[feature] = 0
-    # Удаление лишних признаков
-    input_data = input_data[expected_features]
+            input_data[feature] = 0  # Или любое другое значение по умолчанию
+
+    # Удалить лишние признаки, которых нет в обученной модели
+    input_data = input_data[model_features]
+    
     return input_data
 
 # Функция для предсказания
 def predict_with_model(model, input_data):
     try:
-        # Нормализация данных
-        if scaler is not None:
-            input_data_normalized = scaler.transform(input_data)
-        else:
-            st.error("Scaler отсутствует. Нормализация не может быть выполнена.")
-            return None
-        
-        # Проверка на совпадение признаков
         if hasattr(model, "feature_names_in_"):
             input_data = preprocess_input(input_data, model.feature_names_in_)
+        # Нормализация данных (если требуется)
+        if scaler:
+            input_data_normalized = scaler.transform(input_data)
+        else:
+            input_data_normalized = input_data
+
         predictions = model.predict(input_data_normalized)
         return predictions
     except Exception as e:
