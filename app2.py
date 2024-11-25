@@ -1,64 +1,55 @@
 import streamlit as st
 import pandas as pd
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor
+import joblib
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.model_selection import train_test_split
-import numpy as np
 
-# Загрузка и подготовка примерного набора данных
-def load_dataset():
-    # Примерный набор данных (замените на ваш реальный)
-    data = {
-        "economic_growth_rate": np.random.rand(100),
-        "year": np.random.randint(2010, 2025, 100),
-        "total_emigrants": np.random.rand(100) * 100000,
-        "gdp_per_capita_usd": np.random.rand(100) * 50000,
-        "it_growth_potential": np.random.rand(100) * 1000,
-        "migration_index": np.random.rand(100) * 1000,  # Целевая переменная
-    }
-    return pd.DataFrame(data)
+# Загрузка сохраненных моделей
+model_paths = {
+    "Linear Regression": "migration_index_linear_regression_Model.pkl",
+    "Random Forest": "migration_index_random_Forest_Model.pkl"
+}
 
-# Обучение моделей
-def train_models(data):
-    X = data.drop(columns=["migration_index"])
-    y = data["migration_index"]
-    
-    scaler = MinMaxScaler()
-    X_scaled = scaler.fit_transform(X)
-    
-    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
-    
-    # Линейная регрессия
-    lr_model = LinearRegression()
-    lr_model.fit(X_train, y_train)
-    
-    # Random Forest
-    rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
-    rf_model.fit(X_train, y_train)
-    
-    return lr_model, rf_model, scaler, X.columns
+# Загрузка scaler
+scaler_path = "scaler.pkl"  # Убедитесь, что этот файл существует в проекте
+try:
+    scaler = joblib.load(scaler_path)
+except FileNotFoundError:
+    st.error("Scaler не найден. Убедитесь, что scaler.pkl загружен.")
+    scaler = None
 
-# Обработка входных данных
-def preprocess_input(input_data, expected_features, scaler):
-    df = pd.DataFrame([input_data])
-    for feature in expected_features:
-        if feature not in df.columns:
-            df[feature] = 0  # Добавление отсутствующих признаков
-    df = df[expected_features]
-    return scaler.transform(df)
+# Функция для предсказания
+def predict_with_model(model, input_data):
+    try:
+        # Нормализация данных
+        if scaler is not None:
+            input_data_normalized = scaler.transform(input_data)
+        else:
+            st.error("Scaler отсутствует. Нормализация не может быть выполнена.")
+            return None
 
-# Streamlit-приложение
+        predictions = model.predict(input_data_normalized)
+        return predictions
+    except Exception as e:
+        st.error(f"Ошибка во время предсказания: {e}")
+        return None
+
+# Интерфейс Streamlit
 st.title("Прогнозирование с использованием моделей машинного обучения")
 
-# Загрузка данных и обучение моделей
-data = load_dataset()
-lr_model, rf_model, scaler, expected_features = train_models(data)
-
 # Выбор модели
-model_name = st.sidebar.selectbox("Выберите модель", ["Linear Regression", "Random Forest"])
-model = lr_model if model_name == "Linear Regression" else rf_model
-st.sidebar.success(f"{model_name} готова для предсказаний!")
+model_name = st.sidebar.selectbox("Выберите модель", list(model_paths.keys()))
+
+# Загрузка модели
+if model_name in model_paths:
+    try:
+        model = joblib.load(model_paths[model_name])
+        st.sidebar.success(f"Модель '{model_name}' загружена.")
+    except FileNotFoundError:
+        st.sidebar.error(f"Файл модели '{model_paths[model_name]}' не найден.")
+        model = None
+else:
+    st.sidebar.error("Модель не выбрана.")
+    model = None
 
 # Ввод данных пользователем
 st.header("Введите данные для предсказания")
@@ -68,17 +59,17 @@ input_data = {
     "total_emigrants": st.number_input("Total Emigrants", value=300000),
     "gdp_per_capita_usd": st.number_input("GDP per Capita (USD)", value=1800),
     "it_growth_potential": st.number_input("IT Growth Potential", value=20095),
+    # Добавьте остальные 18 признаков
 }
 
-# Проверка и предсказание
+# Преобразование входных данных в DataFrame
+input_df = pd.DataFrame([input_data])
+
+# Кнопка для предсказания
 if st.button("Предсказать"):
-    try:
-        processed_input = preprocess_input(input_data, expected_features, scaler)
-        prediction = model.predict(processed_input)
-        st.success(f"Предсказание: {prediction[0]:.2f}")
-    except Exception as e:
-        st.error(f"Ошибка во время предсказания: {e}")
-
-
-
-#это уже лучше чем было
+    if model:
+        prediction = predict_with_model(model, input_df)
+        if prediction is not None:
+            st.success(f"Предсказание: {prediction[0]:.2f}")
+    else:
+        st.error("Модель не загружена. Выберите модель из списка.")
