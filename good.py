@@ -1,15 +1,21 @@
 import streamlit as st
 import pandas as pd
-import joblib
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
 import numpy as np
+import streamlit as st
+import pandas as pd
+import joblib
 
 # Загрузка сохранённых моделей
 model_paths = {
     "Linear Regression": "migration_index_linear_regression_Model.pkl",
-    "Random Forest": "migration_index_random_forest_Model.pkl"
+    "Random Forest": "migration_index_random_Forest_Model.pkl"
 }
 
-# Коэффициент для коррекции предсказания
+# Коэффициент для коррекции
 CORRECTION_FACTOR = 0.01383
 
 # Функция для обработки данных
@@ -33,8 +39,8 @@ def predict_with_model(model, input_data):
         # Выполнить предсказание
         predictions = model.predict(input_data)
         
-        # Применить коэффициент коррекции
-        predictions_corrected = predictions * CORRECTION_FACTOR
+        # Применить коэффициент коррекции (деление)
+        predictions_corrected = predictions / CORRECTION_FACTOR
         return predictions_corrected
     except Exception as e:
         st.error(f"Ошибка во время предсказания: {e}")
@@ -81,3 +87,7 @@ if st.button("Предсказать"):
             st.success(f"Скорректированное предсказание: {prediction[0]:.2f}")
     else:
         st.error("Модель не загружена. Выберите модель из списка.")
+
+
+
+#это уже лучше чем было
