@@ -75,6 +75,7 @@ if st.button("Предсказать"):
     try:
         processed_input = preprocess_input(input_data, expected_features, scaler)
         prediction = model.predict(processed_input)
+        prediction  = prediction: 61.25511482254697
         st.success(f"Предсказание: {prediction[0]:.2f}")
     except Exception as e:
         st.error(f"Ошибка во время предсказания: {e}")
