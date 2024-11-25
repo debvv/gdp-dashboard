@@ -12,7 +12,7 @@ import joblib
 # Загрузка сохранённых моделей
 model_paths = {
     "Linear Regression": "migration_index_linear_regression_Model.pkl",
-    "Random Forest": "migration_index_random_Forest_Model.pkl"
+    "Random Forest": "migration_index_random_forest_Model.pkl"
 }
 
 # Коэффициент для коррекции
