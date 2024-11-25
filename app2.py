@@ -24,9 +24,9 @@ def preprocess_input(input_data, model_features):
     # Добавить недостающие признаки с нулевыми значениями
     for feature in model_features:
         if feature not in input_data.columns:
-            input_data[feature] = 0  # Или любое другое значение по умолчанию
+            input_data[feature] = 0  # Или любое значение по умолчанию (например, среднее из тренировочного набора)
 
-    # Удалить лишние признаки, которых нет в обученной модели
+    # Удалить лишние признаки, которых нет в модели
     input_data = input_data[model_features]
     
     return input_data
@@ -34,9 +34,11 @@ def preprocess_input(input_data, model_features):
 # Функция для предсказания
 def predict_with_model(model, input_data):
     try:
+        # Проверить ожидаемые признаки модели
         if hasattr(model, "feature_names_in_"):
             input_data = preprocess_input(input_data, model.feature_names_in_)
-        # Нормализация данных (если требуется)
+        
+        # Нормализация данных
         if scaler:
             input_data_normalized = scaler.transform(input_data)
         else:
@@ -62,15 +64,12 @@ if model_name in model_paths:
     except FileNotFoundError:
         st.sidebar.error(f"Файл модели '{model_paths[model_name]}' не найден.")
         model = None
-else:
-    st.sidebar.error("Модель не выбрана.")
-    model = None
 
 # Ввод данных пользователем
 st.header("Введите данные для предсказания")
 input_data = {
     "economic_growth_rate": st.number_input("Economic Growth Rate", value=7.1),
-    "year": st.number_input("Year", value=2024),
+    "year": st.number_input("Year", value=2010),
     "total_emigrants": st.number_input("Total Emigrants", value=300000),
     "gdp_per_capita_usd": st.number_input("GDP per Capita (USD)", value=1800),
     "it_growth_potential": st.number_input("IT Growth Potential", value=20095),
@@ -95,13 +94,17 @@ input_data = {
 # Преобразование входных данных в DataFrame
 input_df = pd.DataFrame([input_data])
 
-# Кнопка для предсказания
+
+# Вывод данных
+st.write("Данные для предсказания:")
+st.write(input_df)
+
+# Предсказание
 if st.button("Предсказать"):
     if model:
-        if hasattr(model, "feature_names_in_"):
-            input_df = preprocess_input(input_df, model.feature_names_in_)
         prediction = predict_with_model(model, input_df)
         if prediction is not None:
-            st.success(f"Предсказание: {prediction[0]:.2f}")
+            st.success(f"Предсказание: {prediction}")
     else:
         st.error("Модель не загружена. Выберите модель из списка.")
+
